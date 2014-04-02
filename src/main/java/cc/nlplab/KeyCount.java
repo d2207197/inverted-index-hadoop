@@ -48,9 +48,6 @@ public class KeyCount  implements WritableComparable {
     public String toString() {
 	return "(" + this.getKey() + ", " + this.getCount() + ")";
     }
-
-
-    
 }
 
 

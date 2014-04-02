@@ -17,23 +17,15 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
-
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.hadoop.mapreduce.lib.reduce.IntSumReducer;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.JobControl;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
-
-
-// import org.apache.hadoop.mapreduce.lib.chain.ChainReducer;
-// import org.apache.hadoop.mapreduce.lib.chain.ChainMapper;
 
 
 public class BuildInvertedIndex  extends Configured implements Tool{
@@ -48,10 +40,10 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	protected void setup(Context context) throws IOException, InterruptedException
 	    {
 		fileName = new Text(((FileSplit) context.getInputSplit()).getPath().getName().toString());
- 
 	    }
  
-	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException
+	    {
 	    String line = value.toString();
 	    // StringTokenizer tokenizer = new StringTokenizer(line);
 
@@ -65,15 +57,6 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	    }
 	}
     }
-
-
-    // public class CountTfPartition extends Partitioner<TextPair, IntWritable>{
-    // 	@Override
-    // 	public int getPartition(TextPair termFile, IntWritable value, int numPartitions) {
-    // 	    return  (termFile.getFirst ().hashCode () &Interger.MAX_VALUE) % numPartitions ;
-    // 	}
-    // }
-
     
     public static class CountTfCombine extends Reducer<TextPair, KeyCount, TextPair, KeyCount> {
 
@@ -114,33 +97,6 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	}
     }
 
-    public static class MergeTfMap extends Mapper<TextPair, IntWritable, Text, KeyCount> {
-	public void map(TextPair termFile, IntWritable count, Context context) throws IOException, InterruptedException {
-	    context.write(termFile.getFirst(), new KeyCount(termFile.getSecond(), count));
-	}
-    }
- 
-    public static class MergeTfReduce extends Reducer<Text, KeyCount, KeyCount, KeyCountArrayWritable> {
-	public void reduce(Text term, Iterable<KeyCount> fileTfs, Context context)
-	    throws IOException, InterruptedException {
-	}
-    }
-
-
-    // public static class Reduce extends Reducer<EasyPair, IntWritable, EasyPair, IntWritable> {
- 
-    // 	public void reduce(EasyPair key, Iterable<IntWritable> values, Context context)
-    // 	    throws IOException, InterruptedException {
-    // 	    int sum = 0;
-    // 	    for (IntWritable val : values) {
-    // 		sum += val.get();
-    // 	    }
-    // 	    context.write(key, new IntWritable(sum));
-    // 	}
-    // }
-
-
-
 
     private Job countTfJob(Path inputPath, Path outputPath) throws IOException {
 
@@ -171,104 +127,27 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	// output
 	// SequenceFileOutputFormat.setOutputPath(job, outputPath);
 	// job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	job.setOutputFormatClass(TextOutputFormat.class);
 	TextOutputFormat.setOutputPath(job, outputPath);
+	job.setOutputFormatClass(TextOutputFormat.class);
 
 	return job;
     }
 
-    private Job mergeTfJob(Path inputPath, Path outputPath) throws IOException {
-
-	Job job = new Job(getConf(), "step 2: merge tf");
-
-	job.setJarByClass(BuildInvertedIndex.class);
-
-	// input
-	SequenceFileInputFormat.addInputPath(job, inputPath);
-	job.setInputFormatClass(SequenceFileInputFormat.class);
-
-	// map
-	job.setMapperClass(MergeTfMap.class);
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(KeyCount.class);
-
-	// reducer
-	job.setReducerClass(MergeTfReduce.class);
-        job.setOutputKeyClass(KeyCount.class);
-	job.setOutputValueClass(KeyCountArrayWritable.class);
- 
-	// job.setNumReduceTasks(0);
-	// output
-	// job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	// SequenceFileOutputFormat.setOutputPath(job, outputPath);
-	job.setOutputFormatClass(TextOutputFormat.class);
-	TextOutputFormat.setOutputPath(job, outputPath);
-
-	return job;
-    }
-    
+        
     @Override
     public int run(String[] args) throws Exception {
 	// Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(getConf());
 	Path inputPath = new Path(args[0]);
 	Path outputPath = new Path(args[1]);
-
-	Path parentPath = outputPath.getParent();
-	// Path tmp1Dir = new Path(parentDir, "tmp");
-	Path intermediateTempPath = new Path(parentPath, getClass().getSimpleName() + "-tmp");
-	
-	fs.delete(intermediateTempPath);
 	fs.delete(outputPath);
-
-	try {
-
-	    JobControl jobControler = new JobControl("build inverted index");
-
-	    ControlledJob step1 = new ControlledJob(countTfJob(inputPath, outputPath), null);
-	    // ControlledJob step2 = new ControlledJob(mergeTfJob(intermediateTempPath, outputPath), Arrays.asList(step1));
-	    
-	    jobControler.addJob(step1);
-	    // jobControler.addJob(step2);
-	    
-	    Thread workflowThread = new Thread(jobControler, "Workflow-Thread");
-	    workflowThread.setDaemon(true);
-	    workflowThread.start();
-	    
-	    // jobControler.run();
-	
-	    while (!jobControler.allFinished()){
-		Thread.sleep(500);
-	    }
-	    if ( jobControler.getFailedJobList().size() > 0 ){
-		log.error(jobControler.getFailedJobList().size() + " jobs failed!");
-		for ( ControlledJob job : jobControler.getFailedJobList()){
-		    log.error(job.getJobName() + " failed");
-		}
-	    } else {
-		log.info("Success!! Workflow completed [" + jobControler.getSuccessfulJobList().size() + "] jobs");
-	    }
-
-	} finally {
-	    // fs.delete(intermediateTempPath);
-	    System.out.println("Yeah");
-	}
-	return 0;
+    
+	return (countTfJob(inputPath, outputPath).waitForCompletion(true) ? 1: 0);
 
     } 
     public static void main(String[] args) throws Exception {
-
 	int exitCode = ToolRunner.run(new BuildInvertedIndex(), args);
 	System.exit(exitCode);
-
-
-
-	// Set the outputs for the Map
-        // job.setMapOutputValueClass(IntWritable.class);
-
-        // Set the outputs for the Job
- 
-	// job1.waitForCompletion(true);
     }
  
 }
