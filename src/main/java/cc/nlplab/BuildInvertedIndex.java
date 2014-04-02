@@ -74,6 +74,15 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	}
     }
 
+    
+    public static class TermPartitioner extends Partitioner<TextPair, KeyCount> {
+    	@Override
+    	public int getPartition(TextPair termFile, KeyCount fileCount, int numPartitions) 
+    	{
+    	    return ( termFile.getFirst().hashCode() & Integer.MAX_VALUE) % numPartitions;
+    	}
+    }
+
     public static class GroupComparator extends WritableComparator{
 	protected GroupComparator(){
 	    super(TextPair.class, true);
@@ -83,6 +92,8 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	    return ((TextPair)w1).getFirst ().compareTo (((TextPair)w2).getFirst ());
 	}
     }
+
+
 
     public static class CountTfReduce extends Reducer<TextPair, KeyCount, KeyCount, KeyCountArrayWritable> {
 	public void reduce (TextPair termFile, Iterable<KeyCount> fileTfs, Context context)
@@ -115,11 +126,14 @@ public class BuildInvertedIndex  extends Configured implements Tool{
         job.setMapOutputKeyClass(TextPair.class);
 	job.setMapOutputValueClass(KeyCount.class);
 
-	// grouping
-	job.setGroupingComparatorClass (GroupComparator.class);
-
 	// combiner
 	job.setCombinerClass(CountTfCombine.class);
+
+	// partitioner
+	job.setPartitionerClass(TermPartitioner.class);
+	     
+	// grouping
+	job.setGroupingComparatorClass (GroupComparator.class);
 
 	// reducer
 	job.setReducerClass(CountTfReduce.class);
