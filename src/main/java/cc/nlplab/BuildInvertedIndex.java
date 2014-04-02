@@ -28,6 +28,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
 
+import org.apache.commons.cli.*;
+
+
 public class BuildInvertedIndex  extends Configured implements Tool{
     private final Logger log = Logger.getLogger(getClass());
 
@@ -98,7 +101,7 @@ public class BuildInvertedIndex  extends Configured implements Tool{
     }
 
 
-    private Job countTfJob(Path inputPath, Path outputPath) throws IOException {
+    private Job countTfJob(Path inputPath, Path outputPath, Boolean doTextOutput) throws IOException {
 
 	Job job = new Job(getConf(), "step 1: count tf");
 	job.setJarByClass(getClass());
@@ -125,10 +128,13 @@ public class BuildInvertedIndex  extends Configured implements Tool{
  
 	// job.setNumReduceTasks(8);
 	// output
-	// SequenceFileOutputFormat.setOutputPath(job, outputPath);
-	// job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	TextOutputFormat.setOutputPath(job, outputPath);
-	job.setOutputFormatClass(TextOutputFormat.class);
+	if (doTextOutput == true){
+	    TextOutputFormat.setOutputPath(job, outputPath);
+	    job.setOutputFormatClass(TextOutputFormat.class);
+	} else {
+	    SequenceFileOutputFormat.setOutputPath(job, outputPath);
+	    job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	}
 
 	return job;
     }
@@ -137,14 +143,24 @@ public class BuildInvertedIndex  extends Configured implements Tool{
     @Override
     public int run(String[] args) throws Exception {
 	// Configuration conf = new Configuration();
-	FileSystem fs = FileSystem.get(getConf());
-	Path inputPath = new Path(args[0]);
-	Path outputPath = new Path(args[1]);
-	fs.delete(outputPath);
-    
-	return (countTfJob(inputPath, outputPath).waitForCompletion(true) ? 1: 0);
+	Options options = new Options();
+	options.addOption("t", false, "output in text format");
+	CommandLineParser parser = new GnuParser();
+	CommandLine cmd = parser.parse( options, args);
 
+
+	FileSystem fs = FileSystem.get(getConf());
+	Path inputPath = new Path(cmd.getArgs()[0]);
+	Path outputPath = new Path(cmd.getArgs()[1]);
+	fs.delete(outputPath);
+
+	Boolean doTextOutput = false;
+	if(cmd.hasOption("t")) 
+	    doTextOutput = true;
+	    
+	return (countTfJob(inputPath, outputPath, doTextOutput).waitForCompletion(true) ? 1: 0);
     } 
+
     public static void main(String[] args) throws Exception {
 	int exitCode = ToolRunner.run(new BuildInvertedIndex(), args);
 	System.exit(exitCode);
