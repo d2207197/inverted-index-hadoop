@@ -3,7 +3,7 @@ package cc.nlplab;
 import java.io.IOException;
 import java.util.*;
 
-import cc.nlplab.TextPair;
+import cc.nlplab.TextPairWC;
 import cc.nlplab.KeyCount;
 import cc.nlplab.KeyCountArrayWritable;
  
@@ -35,7 +35,7 @@ public class BuildInvertedIndex  extends Configured implements Tool{
     private final Logger log = Logger.getLogger(getClass());
 
  
-    public static class CountTfMap extends Mapper<LongWritable, Text, TextPair, KeyCount> {
+    public static class CountTfMap extends Mapper<LongWritable, Text, TextPairWC, KeyCount> {
 	private final static IntWritable one = new IntWritable(1);
 	private Text word = new Text();
 
@@ -56,14 +56,14 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	    for (String term: terms){
 		index++;
 		Text termText = new Text(term.toLowerCase());
-		context.write(new TextPair(termText, fileName), new KeyCount (fileName, one));
+		context.write(new TextPairWC(termText, fileName), new KeyCount (fileName, one));
 	    }
 	}
     }
     
-    public static class CountTfCombine extends Reducer<TextPair, KeyCount, TextPair, KeyCount> {
+    public static class CountTfCombine extends Reducer<TextPairWC, KeyCount, TextPairWC, KeyCount> {
 
-	public void reduce (TextPair termFile, Iterable<KeyCount> fileTfs, Context context)
+	public void reduce (TextPairWC termFile, Iterable<KeyCount> fileTfs, Context context)
 	    throws IOException, InterruptedException {
 	    int sum = 0;
 	    for (KeyCount fileTf: fileTfs) {
@@ -75,9 +75,9 @@ public class BuildInvertedIndex  extends Configured implements Tool{
     }
 
     
-    public static class TermPartitioner extends Partitioner<TextPair, KeyCount> {
+    public static class TermPartitioner extends Partitioner<TextPairWC, KeyCount> {
     	@Override
-    	public int getPartition(TextPair termFile, KeyCount fileCount, int numPartitions) 
+    	public int getPartition(TextPairWC termFile, KeyCount fileCount, int numPartitions) 
     	{
     	    return ( termFile.getFirst().hashCode() & Integer.MAX_VALUE) % numPartitions;
     	}
@@ -85,18 +85,18 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 
     public static class GroupComparator extends WritableComparator{
 	protected GroupComparator(){
-	    super(TextPair.class, true);
+	    super(TextPairWC.class, true);
 	}
 	@Override
 	public int compare(WritableComparable w1, WritableComparable w2){
-	    return ((TextPair)w1).getFirst ().compareTo (((TextPair)w2).getFirst ());
+	    return ((TextPairWC)w1).getFirst ().compareTo (((TextPairWC)w2).getFirst ());
 	}
     }
 
 
 
-    public static class CountTfReduce extends Reducer<TextPair, KeyCount, KeyCount, KeyCountArrayWritable> {
-	public void reduce (TextPair termFile, Iterable<KeyCount> fileTfs, Context context)
+    public static class CountTfReduce extends Reducer<TextPairWC, KeyCount, KeyCount, KeyCountArrayWritable> {
+	public void reduce (TextPairWC termFile, Iterable<KeyCount> fileTfs, Context context)
 	    throws IOException, InterruptedException {
 
 	    ArrayList<KeyCount> fileTfs_list = new ArrayList<KeyCount>();
@@ -123,7 +123,7 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 
 	// mapper
 	job.setMapperClass(CountTfMap.class);
-        job.setMapOutputKeyClass(TextPair.class);
+        job.setMapOutputKeyClass(TextPairWC.class);
 	job.setMapOutputValueClass(KeyCount.class);
 
 	// combiner
