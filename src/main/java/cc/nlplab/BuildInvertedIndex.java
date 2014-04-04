@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.*;
 
 import cc.nlplab.TextPairWC;
-import cc.nlplab.KeyCount;
+import cc.nlplab.TextIntWC;
 import cc.nlplab.KeyCountArrayWritable;
- 
+import cc.nlplab.SortedMapW; 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 
@@ -35,7 +35,7 @@ public class BuildInvertedIndex  extends Configured implements Tool{
     private final Logger log = Logger.getLogger(getClass());
 
  
-    public static class CountTfMap extends Mapper<LongWritable, Text, TextPairWC, KeyCount> {
+    public static class CountTfMap extends Mapper<LongWritable, Text, TextPairWC, TextIntWC> {
 	private final static IntWritable one = new IntWritable(1);
 	private Text word = new Text();
 
@@ -56,28 +56,28 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	    for (String term: terms){
 		index++;
 		Text termText = new Text(term.toLowerCase());
-		context.write(new TextPairWC(termText, fileName), new KeyCount (fileName, one));
+		context.write(new TextPairWC(termText, fileName), new TextIntWC (fileName, one));
 	    }
 	}
     }
     
-    public static class CountTfCombine extends Reducer<TextPairWC, KeyCount, TextPairWC, KeyCount> {
+    public static class CountTfCombine extends Reducer<TextPairWC, TextIntWC, TextPairWC, TextIntWC> {
 
-	public void reduce (TextPairWC termFile, Iterable<KeyCount> fileTfs, Context context)
+	public void reduce (TextPairWC termFile, Iterable<TextIntWC> fileTfs, Context context)
 	    throws IOException, InterruptedException {
 	    int sum = 0;
-	    for (KeyCount fileTf: fileTfs) {
-		sum += fileTf.getCount ().get ();
+	    for (TextIntWC fileTf: fileTfs) {
+		sum += fileTf.getSecond().get ();
 	    }
 
-	    context.write(termFile, new KeyCount ( termFile.getSecond (), new IntWritable (sum) ));
+	    context.write(termFile, new TextIntWC ( termFile.getSecond (), new IntWritable (sum) ));
 	}
     }
 
     
-    public static class TermPartitioner extends Partitioner<TextPairWC, KeyCount> {
+    public static class TermPartitioner extends Partitioner<TextPairWC, TextIntWC> {
     	@Override
-    	public int getPartition(TextPairWC termFile, KeyCount fileCount, int numPartitions) 
+    	public int getPartition(TextPairWC termFile, TextIntWC fileCount, int numPartitions) 
     	{
     	    return ( termFile.getFirst().hashCode() & Integer.MAX_VALUE) % numPartitions;
     	}
@@ -95,19 +95,26 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 
 
 
-    public static class CountTfReduce extends Reducer<TextPairWC, KeyCount, KeyCount, KeyCountArrayWritable> {
-	public void reduce (TextPairWC termFile, Iterable<KeyCount> fileTfs, Context context)
+    public static class CountTfReduce extends Reducer<TextPairWC, TextIntWC, TextIntWC, SortedMapW> {
+	public void reduce (TextPairWC termFile, Iterable<TextIntWC> fileTfs, Context context)
 	    throws IOException, InterruptedException {
 
-	    ArrayList<KeyCount> fileTfs_list = new ArrayList<KeyCount>();
+	    // ArrayList<TextIntWC> fileTfs_list = new ArrayList<TextIntWC>();
 
-	    for (KeyCount fileTf: fileTfs) {
-		fileTfs_list.add ((KeyCount) WritableUtils.clone (fileTf, context.getConfiguration ()));
-	    }
-	    IntWritable df = new IntWritable(fileTfs_list.size());
-	    KeyCount [] fileTfs_array = fileTfs_list.toArray(new KeyCount [fileTfs_list.size ()]);
+	    // for (TextIntWC fileTf: fileTfs) {
+	    // 	fileTfs_list.add ((TextIntWC) WritableUtils.clone (fileTf, context.getConfiguration ()));
+	    // }
+	    // IntWritable df = new IntWritable(fileTfs_list.size());
+	    // TextIntWC [] fileTfs_array = fileTfs_list.toArray(new TextIntWC [fileTfs_list.size ()]);
 
-	    context.write(new KeyCount(termFile.getFirst (), df), new KeyCountArrayWritable(fileTfs_array));
+	    // context.write(new TextIntWC(termFile.getFirst (), df), new KeyCountArrayWritable(fileTfs_array));
+	    SortedMapW fileTfsMap = new SortedMapW();
+	    for (TextIntWC fileTf: fileTfs)
+		fileTfsMap.put((Text) WritableUtils.clone( fileTf.getFirst(), context.getConfiguration()), 
+			       (IntWritable) WritableUtils.clone(fileTf.getSecond(), context.getConfiguration()) );
+
+	    IntWritable df = new IntWritable(fileTfsMap.size());
+	    context.write(new TextIntWC(termFile.getFirst(), df), fileTfsMap);
 	}
     }
 
@@ -124,7 +131,7 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	// mapper
 	job.setMapperClass(CountTfMap.class);
         job.setMapOutputKeyClass(TextPairWC.class);
-	job.setMapOutputValueClass(KeyCount.class);
+	job.setMapOutputValueClass(TextIntWC.class);
 
 	// combiner
 	job.setCombinerClass(CountTfCombine.class);
@@ -137,8 +144,8 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 
 	// reducer
 	job.setReducerClass(CountTfReduce.class);
-        job.setOutputKeyClass(KeyCount.class);
-	job.setOutputValueClass(KeyCountArrayWritable.class);
+        job.setOutputKeyClass(TextIntWC.class);
+	job.setOutputValueClass(SortedMapW.class);
  
 	// job.setNumReduceTasks(8);
 	// output
