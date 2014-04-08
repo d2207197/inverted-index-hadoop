@@ -15,12 +15,12 @@ public class SortedMapW extends SortedMapWritable
   public String toString()
   {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append(getClass().getSimpleName() + "(");
+    stringBuilder.append(getClass().getSimpleName() + "{");
     for (Map.Entry<WritableComparable, Writable> entry : this.entrySet())
-      stringBuilder.append(entry.getKey().toString() + ": " + entry.getValue().toString() + ", ");
+      stringBuilder.append(entry.getKey().toString() + "=" + entry.getValue().toString() + ", ");
 
     stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
-    stringBuilder.append(")");
+    stringBuilder.append("}");
 
     return stringBuilder.toString();
   }
