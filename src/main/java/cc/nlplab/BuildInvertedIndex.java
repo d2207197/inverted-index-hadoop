@@ -144,7 +144,12 @@ public class BuildInvertedIndex  extends Configured implements Tool{
   	    // IntWritable df = new IntWritable(fileTfsMap.size());
   	    // context.write(new TextIntWC(termFile.getFirst(), df), fileTfsMap);
 
-	  TermInfo [] termInfos_Array = Iterables.toArray(termInfos, TermInfo.class);
+	  ArrayList<TermInfo> termInfos_lst = new ArrayList<TermInfo>();
+	  for (TermInfo termInfo: termInfos)
+	    termInfos_lst.add((TermInfo)WritableUtils.clone(termInfo, context.getConfiguration()));
+	  
+	  TermInfo [] termInfos_Array = termInfos_lst.toArray(new TermInfo[termInfos_lst.size()]);
+	  // TermInfo [] termInfos_Array = Iterables.toArray(termInfos, TermInfo.class);
 	  IntWritable df = new IntWritable(termInfos_Array.length);
 
 	  context.write(new TextIntWC(termFile.getFirst(), df), new TermInfoArray(termInfos_Array));
