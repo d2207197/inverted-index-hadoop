@@ -15,5 +15,4 @@ public class TextIntWithSortedMap extends PairW<TextIntWC, SortedMapW> {
   {
     super(TextIntWC.class, SortedMapW.class, first, second );
   }
-  
 }

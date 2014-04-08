@@ -13,7 +13,7 @@ import java.io.IOException;
 
 // @NoArgsConstructor
 @RequiredArgsConstructor(access = AccessLevel.PUBLIC)
- @EqualsAndHashCode
+@EqualsAndHashCode
 public class PairWC<F extends WritableComparable, S extends WritableComparable>  implements WritableComparable {
   @NonNull @Getter @Setter private Class<? extends WritableComparable> firstClass;
   @NonNull @Getter @Setter private Class<? extends WritableComparable> secondClass;
