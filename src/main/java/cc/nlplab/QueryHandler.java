@@ -12,17 +12,23 @@ public class QueryHandler {
     enum BinaryOperator implements Binary<FileInfoArray> {
         AND {
             public FileInfoArray map(FileInfoArray a, FileInfoArray b) {
-                System.out.print(a + " AND " + b + " = ");
+                System.out.println("\033[1;33mAND\033[m ");
+                System.out.println("    \033[1;34m1:\033[m " + a);
+                System.out.println("    \033[1;34m2:\033[m " + b);
+                
                 FileInfoArray out = a.and(b);
-                System.out.println(out);
+                System.out.println("    \033[1;34m=\033[m " + out + "\n");
                 return out;
             }
         },
         OR {
             public FileInfoArray map(FileInfoArray a, FileInfoArray b) {
-                System.out.print(a + " OR " + b + " = ");
+                System.out.println("\033[1;33mOR\033[m ");
+                System.out.println("    \033[1;34m1:\033[m " + a);
+                System.out.println("    \033[1;34m2:\033[m " + b);
+
                 FileInfoArray out = a.or(b);
-                System.out.println(out);
+                System.out.println("    \033[1;34m=\033[m " + out + "\n");
                 return out;
             }
         }
@@ -31,7 +37,7 @@ public class QueryHandler {
     enum UnaryOperator implements Unary<FileInfoArray> {
         NEG {
             public FileInfoArray map(FileInfoArray n) {
-                System.out.print("- operator: " );
+                System.out.println("\033[1;33m-\033[m\n    \033[1;34m1:\033[m " + n + "\n" );
                 return n.not();
             }
         }
@@ -44,8 +50,8 @@ public class QueryHandler {
 
     final Parser<FileInfoArray> IDENTIFIER = Terminals.Identifier.PARSER.map(new Map<String, FileInfoArray>() {
         public FileInfoArray map(String s) {
-            System.out.println(" get FileInfoArray: " + s);
-            System.out.println(fileInfoMaps.get(s) );
+            // System.out.println(" get FileInfoArray: " + s);
+            // System.out.println(fileInfoMaps.get(s) );
 
             return fileInfoMaps.get(s);
         }

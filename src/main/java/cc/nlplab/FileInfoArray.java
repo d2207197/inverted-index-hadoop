@@ -103,29 +103,29 @@ public class FileInfoArray extends ArrayWritable {
         if (ti < theirs.length)
             result.addAll(Arrays.asList(Arrays.copyOfRange(theirs, ti ,theirs.length)));
 
-        System.out.println("length of OR result: " + result.size());
+        // System.out.println("length of OR result: " + result.size());
         FileInfo [] result_A = result.toArray(new FileInfo[result.size()]);
         return new FileInfoArray(result_A);
     }
 
     public FileInfoArray not() {
 
-        System.out.println("#1");
+        // System.out.println("#1");
         FileInfo [] fileInfos = (FileInfo []) this.get();
-        System.out.println("#2");
+        // System.out.println("#2");
         if(notFileNameSet == null) {
-            System.out.println("#3");
+            // System.out.println("#3");
             notFileNameSet = new HashSet<String>();
         }
-        System.out.println("#4");
+        // System.out.println("#4");
 
 
         for (FileInfo fileInfo: fileInfos) {
-            System.out.println("#5");
+            // System.out.println("#5");
             notFileNameSet.add(fileInfo.getFileName());
         }
 
-        System.out.println("#6");
+        // System.out.println("#6");
         notFlag = true;
         // this.set(new FileInfo [0]);
         return this;
@@ -135,13 +135,32 @@ public class FileInfoArray extends ArrayWritable {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(getClass().getSimpleName() + "[");
-        for (Writable entry : this.get()) {
-            FileInfo fileInfo = (FileInfo) entry;
-            System.out.println("entry: " + fileInfo);
-            stringBuilder.append(fileInfo.toString() + ", ");
+        if (notFlag) {
+            stringBuilder.append("-");
+            stringBuilder.append(getClass().getSimpleName() + "[");
+            for(String fn: notFileNameSet){
+                stringBuilder.append(fn + ", ");
+            }
+
         }
-        // stringBuilder.append(entry.getKey().toString() + "=" + entry.getValue().toString() + ", ");
+        else {
+
+            stringBuilder.append(getClass().getSimpleName() + "[");
+
+            if (this.get().length == 0) {
+                stringBuilder.append("]");
+                return stringBuilder.toString();
+            }
+            
+
+            for (Writable entry : this.get()) {
+                FileInfo fileInfo = (FileInfo) entry;
+                // System.out.println("entry: " + fileInfo);
+                stringBuilder.append(fileInfo.getFileName() + ", ");
+            }
+            // stringBuilder.append(entry.getKey().toString() + "=" + entry.getValue().toString() + ", ");
+            
+        }
 
         stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
         stringBuilder.append("]");
