@@ -12,18 +12,18 @@ import org.apache.hadoop.io.LongWritable;
 import cc.nlplab.TermInfo;
 
 public class LongArrayListW extends ArrayList<Long> implements Writable {
-  public void readFields(DataInput in) throws IOException {
-    clear();
-    int size = in.readInt();
-    for(int i = 0; i < size ; i++ ){
-      this.add(in.readLong());
+    public void readFields(DataInput in) throws IOException {
+        clear();
+        int size = in.readInt();
+        for(int i = 0; i < size ; i++ ) {
+            this.add(in.readLong());
+        }
     }
-  }
-  public void write(DataOutput out) throws IOException {
-    out.writeInt(this.size());
-    for(long data: this){
-      out.writeLong(data);
+    public void write(DataOutput out) throws IOException {
+        out.writeInt(this.size());
+        for(long data: this) {
+            out.writeLong(data);
+        }
     }
-  }
 }
 

@@ -24,29 +24,29 @@ public class KeyCount  implements WritableComparable {
     @Getter @Setter @NonNull private IntWritable count;
 
     public int compareTo(Object object) {
-	KeyCount ip2 = (KeyCount) object;
-	int cmp = getKey().compareTo(ip2.getKey());
-	if (cmp != 0) 
-	    return cmp;
-	return getCount().compareTo(ip2.getCount()); // reverse
+        KeyCount ip2 = (KeyCount) object;
+        int cmp = getKey().compareTo(ip2.getKey());
+        if (cmp != 0)
+            return cmp;
+        return getCount().compareTo(ip2.getCount()); // reverse
     }
     public void readFields(DataInput in) throws IOException {
-	if (key == null)
-	    key = new Text();
-	if (count == null)
-	    count = new IntWritable();
+        if (key == null)
+            key = new Text();
+        if (count == null)
+            count = new IntWritable();
 
-	key.readFields(in);
-	count.readFields(in);
+        key.readFields(in);
+        count.readFields(in);
     }
 
     public void write(DataOutput out) throws IOException {
-	key.write(out);
-	count.write(out);
+        key.write(out);
+        count.write(out);
     }
 
     public String toString() {
-	return "(" + this.getKey() + ", " + this.getCount() + ")";
+        return "(" + this.getKey() + ", " + this.getCount() + ")";
     }
 }
 

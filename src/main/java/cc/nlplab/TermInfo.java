@@ -16,37 +16,37 @@ import cc.nlplab.LongArrayListW;
 @EqualsAndHashCode
 @NoArgsConstructor
 public class TermInfo implements Writable {
-  @NonNull @Getter @Setter private String fileName;
-  @NonNull @Getter @Setter private int tf;
-  @NonNull @Getter @Setter private LongArrayListW offsets;
+    @NonNull @Getter @Setter private String fileName;
+    @NonNull @Getter @Setter private int tf;
+    @NonNull @Getter @Setter private LongArrayListW offsets;
 
-  @Override
-  public void readFields(DataInput in) throws IOException {
-    Text fnText = new Text();
-    fnText.readFields(in);
-    fileName = fnText.toString();
-    tf = in.readInt();
-    // int size = in.readInt();
-    // offsets= new ArrayList<Long>(size);
-    // for(int i = 0; i < size; i++){
-    //   offsets.add(in.readLong());
-    // }
-    if (offsets == null)
-      offsets = new LongArrayListW();
-    offsets.readFields(in);
-  }
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        Text fnText = new Text();
+        fnText.readFields(in);
+        fileName = fnText.toString();
+        tf = in.readInt();
+        // int size = in.readInt();
+        // offsets= new ArrayList<Long>(size);
+        // for(int i = 0; i < size; i++){
+        //   offsets.add(in.readLong());
+        // }
+        if (offsets == null)
+            offsets = new LongArrayListW();
+        offsets.readFields(in);
+    }
 
-  @Override
-  public void write(DataOutput out) throws IOException {
-    new Text(fileName).write(out);
-    out.writeInt(tf);
-    offsets.write(out);
-    // out.writeInt(offsets.size());
-    // for (long offset : offsets) {
-    //   out.writeLong(offset);
-    // }
-  }
-  public String toString() {
-    return "(fn=" + this.fileName + ", tf=" + this.tf + ", ofs=" + this.offsets + ")";
-  }
+    @Override
+    public void write(DataOutput out) throws IOException {
+        new Text(fileName).write(out);
+        out.writeInt(tf);
+        offsets.write(out);
+        // out.writeInt(offsets.size());
+        // for (long offset : offsets) {
+        //   out.writeLong(offset);
+        // }
+    }
+    public String toString() {
+        return "(fn=" + this.fileName + ", tf=" + this.tf + ", ofs=" + this.offsets + ")";
+    }
 }
