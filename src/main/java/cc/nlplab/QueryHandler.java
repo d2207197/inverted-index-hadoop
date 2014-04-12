@@ -10,47 +10,46 @@ import java.util.ArrayList;
 
 public class QueryHandler {
   
-  enum BinaryOperator implements Binary<FileTfIdfMap> {
+  enum BinaryOperator implements Binary<FileInfoArray> {
     AND {
-      public FileTfIdfMap map(FileTfIdfMap a, FileTfIdfMap b) {
+      public FileInfoArray map(FileInfoArray a, FileInfoArray b) {
 	System.out.print(a + " AND " + b + " = ");
-	FileTfIdfMap out = a.and(b);
+	FileInfoArray out = a.and(b);
 	System.out.println(out);
         return out;
       }
     },
     OR {
-      public FileTfIdfMap map(FileTfIdfMap a, FileTfIdfMap b) {
+      public FileInfoArray map(FileInfoArray a, FileInfoArray b) {
 	System.out.print(a + " OR " + b + " = ");
-	FileTfIdfMap out = a.or(b);
+	FileInfoArray out = a.or(b);
 	System.out.println(out);
 	return out;
       }
     }
   }
   
-  enum UnaryOperator implements Unary<FileTfIdfMap> {
+  enum UnaryOperator implements Unary<FileInfoArray> {
     NEG {
-      public FileTfIdfMap map(FileTfIdfMap n) {
+      public FileInfoArray map(FileInfoArray n) {
+	System.out.print("- operator: " );
         return n.not();
-	
       }
     }
   }
 
-  private HashMap<String, FileTfIdfMap> fileTfIdfMaps = new HashMap<String, FileTfIdfMap>();
-  public void putfileTfIdfMap(String fileName, FileTfIdfMap fileTfIdfMap)
+  private HashMap<String, FileInfoArray> fileInfoMaps = new HashMap<String, FileInfoArray>();
+  public void putFileInfoArray(String term, FileInfoArray fileInfos)
   {
-    this.fileTfIdfMaps.put(fileName, fileTfIdfMap);
+    this.fileInfoMaps.put(term, fileInfos);
   }
   
-  
-  final Parser<FileTfIdfMap> IDENTIFIER = Terminals.Identifier.PARSER.map(new Map<String, FileTfIdfMap>() {
-      public FileTfIdfMap map(String s) {
-		System.out.println(" get FileTfIdfMap: " + s);
-		System.out.println(fileTfIdfMaps.get(s) );
+  final Parser<FileInfoArray> IDENTIFIER = Terminals.Identifier.PARSER.map(new Map<String, FileInfoArray>() {
+      public FileInfoArray map(String s) {
+		System.out.println(" get FileInfoArray: " + s);
+		System.out.println(fileInfoMaps.get(s) );
 
-        return fileTfIdfMaps.get(s);
+        return fileInfoMaps.get(s);
       }
     });
      
@@ -72,8 +71,8 @@ public class QueryHandler {
     return term(name).retn(value);
   }
   
-  static Parser<FileTfIdfMap> queryHandler(Parser<FileTfIdfMap> atom) {
-    Parser<FileTfIdfMap> parser = new OperatorTable<FileTfIdfMap>()
+  static Parser<FileInfoArray> queryHandler(Parser<FileInfoArray> atom) {
+    Parser<FileInfoArray> parser = new OperatorTable<FileInfoArray>()
     .prefix(op("-", UnaryOperator.NEG), 30)
     .infixl(op("AND", BinaryOperator.AND).or(WHITESPACE_AND), 10)
     .infixl(op("OR", BinaryOperator.OR), 20)
@@ -81,24 +80,24 @@ public class QueryHandler {
     return parser;
   }
   
-  public final Parser<FileTfIdfMap> parser = queryHandler(IDENTIFIER).from(TOKENIZER, IGNORED);
+  public final Parser<FileInfoArray> parser = queryHandler(IDENTIFIER).from(TOKENIZER, IGNORED);
 
 
   // public static void main(String [] args)
   // {
-  //   FileTfIdfMap aaa = new FileTfIdfMap();
+  //   FileInfoArray aaa = new FileInfoArray();
   //   aaa.put("file1", 1.1);
   //   aaa.put("file2", 1.2);
   //   aaa.put("file3", 1.3);
-  //   FileTfIdfMap bbb = new FileTfIdfMap();
+  //   FileInfoArray bbb = new FileInfoArray();
   //   bbb.put("file2", 1.1);
   //   bbb.put("file3", 1.2);
   //   bbb.put("file4", 1.3);
 
-  //   FileTfIdfMap ccc = new FileTfIdfMap();
+  //   FileInfoArray ccc = new FileInfoArray();
   //   ccc.put("file1", 1.1);
   //   ccc.put("file2", 1.2);
-  //   FileTfIdfMap ddd = new FileTfIdfMap();
+  //   FileInfoArray ddd = new FileInfoArray();
   //   ddd.put("file3", 1.2);
   //   ddd.put("file4", 1.3);
 

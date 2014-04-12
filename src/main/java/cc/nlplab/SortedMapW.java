@@ -11,6 +11,16 @@ import java.util.Map;
 
 public class SortedMapW extends SortedMapWritable
 {
+
+  public SortedMapW(){
+    super();
+  }
+
+
+  public SortedMapW(SortedMapW other){
+    super(other);
+  }
+
   @Override
   public String toString()
   {

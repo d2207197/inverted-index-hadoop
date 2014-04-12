@@ -7,6 +7,8 @@ import org.apache.hadoop.io.ArrayWritable;
 import cc.nlplab.TermInfo;
 
 public class TermInfoArray extends ArrayWritable {
+
+
   public TermInfoArray() {
     super(TermInfo.class);
   }
@@ -14,7 +16,26 @@ public class TermInfoArray extends ArrayWritable {
     super(TermInfo.class, values);
   }
 
-    @Override
+  // public TermInfoArray and(TermInfoArray other) {
+  //   Writable [] ours = this.get();
+  //   Writable [] theirs = other.get();
+  //   ArrayList<TermInfo> result = new ArrayList<TermInfo>();
+
+  //   oi = 0;
+  //   ti = 0;
+  //   while(oi < ours.length && ti < theirs.length){
+  //     TermInfo our = (TermInfo)ours[oi];
+  //     TermInfo their = (TermInfo)theirs[ti];
+  //     if (our.getFileName() == their.getFileName()){
+  // 	double sum_tfIdf = our.getTfIdf() + their.getTfIdf();
+  // 	result.add(new TermInfo(their.getFileName(), 0));
+	
+  //     }
+  //   }
+
+  // }
+
+  @Override
   public String toString()
   {
     StringBuilder stringBuilder = new StringBuilder();
@@ -24,7 +45,7 @@ public class TermInfoArray extends ArrayWritable {
 	TermInfo termInfo = (TermInfo) entry;
 	stringBuilder.append(termInfo.toString() + ", ");
       }
-      // stringBuilder.append(entry.getKey().toString() + "=" + entry.getValue().toString() + ", ");
+    // stringBuilder.append(entry.getKey().toString() + "=" + entry.getValue().toString() + ", ");
 
     stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
     stringBuilder.append("]");

@@ -12,6 +12,7 @@ import cc.nlplab.KeyCountArrayWritable;
 import cc.nlplab.SortedMapW;
 import cc.nlplab.TermInfo;
 import cc.nlplab.TermInfoArray;
+import cc.nlplab.LongArrayListW;
 
 
 import org.apache.hadoop.fs.FileSystem;
@@ -68,7 +69,7 @@ public class BuildInvertedIndex  extends Configured implements Tool{
 	Text termText = new Text(sc.next());
 	MatchResult match = sc.match();
 	
-	ArrayList<Long> offsets = new ArrayList<Long>();
+	LongArrayListW offsets = new LongArrayListW();
 	offsets.add(match.start() + position.get());
 	context.write(new TextPairWC(termText, new Text(fileName)), new TermInfo(fileName, 1, offsets));
 	
@@ -87,7 +88,7 @@ public class BuildInvertedIndex  extends Configured implements Tool{
     public void reduce (TextPairWC termFile, Iterable<TermInfo> termInfos, Context context)
       throws IOException, InterruptedException {
       int sum = 0;
-      ArrayList<Long> offsets = new ArrayList<Long>();
+      LongArrayListW offsets = new LongArrayListW();
 
 
       for (TermInfo termInfo: termInfos) {
