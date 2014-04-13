@@ -2,21 +2,21 @@ build-inverted-index-hadoop
 ===========================
 
 
-# Instruction (Short version)
+## Instruction (Short version) ##
 
     $ mvn clean compile assembly:single
     $ hadoop jar target/inverted-index-1.0-SNAPSHOT-jar-with-dependencies.jar cc.nlplab.BuildInvertedIndex  /opt/HW1/input1 inverted-index-output
     $ hadoop jar target/inverted-index-1.0-SNAPSHOT-jar-with-dependencies.jar cc.nlplab.Query inverted-index-output /opt/HW1/input1 "book OR sport store -went twenty"
 
-# Instruction (Long version)
+## Instruction (Long version) ##
 
-## Install Maven
+### Install Maven ###
 
 The project should be built with Maven. If the system haven't install Maven. Install it with the following command in Debian/Ubuntu distros.
 
     $ sudo apt-get install maven2
 
-## Build the jar file
+### Build the jar file ###
 
 After Maven have been installed. Project can be built with following command.
 
@@ -27,7 +27,7 @@ The jar file should be generated in the *target/* folder.
     $ ls target/
     archive-tmp  classes  generated-sources  inverted-index-1.0-SNAPSHOT-jar-with-dependencies.jar  maven-status
 
-## Generate inverted index
+### Generate inverted index ###
 
 Use `BuildInvertedIndex` class for generating inverted index files. The command line syntax of the class as shown in the following.
 
@@ -44,7 +44,7 @@ To generate the inverted index files of the documents in `/opt/HW1/input1` to `i
 
     $ hadoop jar target/inverted-index-1.0-SNAPSHOT-jar-with-dependencies.jar cc.nlplab.BuildInvertedIndex  /opt/HW1/input1 inverted-index-output
 
-## Query the inverted index
+### Query the inverted index ###
 
 After generated inverted index files to **inverted-index-output** folder, we can use `Query` class for querying the inverted index. 
 
@@ -105,11 +105,11 @@ The output is in the following format. Top 10 high score documents, all matched 
 
 
 
-# Design
+## Design ##
 
-## BuildInvertedIndex
+### BuildInvertedIndex ###
 
-### 1. Mapper ###
+#### 1. Mapper ####
 
 Split terms in line and generate one record for each term. The *filename* in key makes sure filenames the reducer recieved is sorted.
 
@@ -127,7 +127,7 @@ Output: *term*, *filename* => *filename*, *1*, [*offset* + *offset_in_line*]
     aaa, file2 => file2, 1, [449]
     bbb, file2 => file2, 1, [453]
 
-### 2. Combiner ###
+#### 2. Combiner ####
 
 Combine all record with the same term and filename. In this step, the *term_frequency* is summerized and *offset*s is merged into a list.
 
@@ -148,7 +148,7 @@ Output: *term*, *filename* => *filename*, *term_frequnecy*, [*offset*, ...]
     bbb, file1 => file1, 1, [242]
     bbb, file2 => file2, 2, [445, 453]
 
-### 3. Partitioner ###
+#### 3. Partitioner ####
 
 If the number of reducers is more than one, record with the same *term* might be sent to different reducer. The partitioner makes sure all record with the same *term* would be sent to the same reducer. 
 
@@ -166,7 +166,7 @@ Output:
     hashCode(bbb)
     hashCode(bbb)
 
-### 4. GroupComparator ###
+#### 4. GroupComparator ####
 
 Because the key is composed of both *term* and *filename*, records would be sorted by both *term* and *filename*. But in the reducer, records should be grouped by only *term* for calculating document frequencies. This group comparator ignore *filename* and compares only *term*s that makes sure records would be grouped by *term* only. 
 
@@ -186,7 +186,7 @@ Output:
     ...
 
 
-### 5. Reducer ###
+#### 5. Reducer ####
 
 The reducer merged values into a list and count the number of values.
 
@@ -207,7 +207,7 @@ Output: *term*, *document_frequency* => [(*filename*, *term_frequnecy*, [*offset
 By default, the output of `BuildInvertedIndex` is in `SequenceFile` format which can be easily restore to java objects.
 
 
-## Query
+### Query ###
 
 
 Steps in `Query` class:
@@ -219,9 +219,9 @@ Steps in `Query` class:
 5. Print the merged file list
 
 
-# Questions
+## Questions ##
 
-## 1. How many pass do you used to run mapReduce in part1? Is there any other method to do it? What's the advantage and disadvantage?
+### 1. How many pass do you used to run mapReduce in part1? Is there any other method to do it? What's the advantage and disadvantage? ###
 
 One pass mapReduce in part1.
 
@@ -238,7 +238,7 @@ Many other ways:
    Advantage: The redundant file name in the key can be removed.
    Disadvantage: That needs more memory for sorting file names.
 
-## 2. What is your extension? What’s the most difficult part in your implementation?
+### 2. What is your extension? What’s the most difficult part in your implementation? ###
 
 My extension is supporting basic Google query syntax. All supported operands is described in the following.
 
