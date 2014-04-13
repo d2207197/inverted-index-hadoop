@@ -82,7 +82,7 @@ public class BuildInvertedIndex  extends Configured implements Tool {
     public static class CountTfCombine extends Reducer<TextPairWC, TermInfo, TextPairWC, TermInfo> {
 
         public void reduce (TextPairWC termFile, Iterable<TermInfo> termInfos, Context context)
-        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
             int sum = 0;
             LongArrayListW offsets = new LongArrayListW();
 
@@ -117,7 +117,7 @@ public class BuildInvertedIndex  extends Configured implements Tool {
 
     public static class CountTfReduce extends Reducer<TextPairWC, TermInfo, TextIntWC, TermInfoArray> {
         public void reduce (TextPairWC termFile, Iterable<TermInfo> termInfos, Context context)
-        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
 
             ArrayList<TermInfo> termInfos_lst = new ArrayList<TermInfo>();
             for (TermInfo termInfo: termInfos)
@@ -161,6 +161,8 @@ public class BuildInvertedIndex  extends Configured implements Tool {
         job.setOutputValueClass(TermInfoArray.class);
 
         // job.setNumReduceTasks();
+        // job.setNumMapTasks();
+
         // output
         if (doTextOutput == true) {
             TextOutputFormat.setOutputPath(job, outputPath);
@@ -173,14 +175,34 @@ public class BuildInvertedIndex  extends Configured implements Tool {
         return job;
     }
 
+    public void printHelp(Options options){
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp( "BuildInvertedIndex [OPTION]... <INPUTPATH> <OUTPUTPATH>", "Process text files in INPUTPATH and build inverted index to OUTPUTPATH.\n", options, "");
+
+    }
 
     @Override
     public int run(String[] args) throws Exception {
-        // Configuration conf = new Configuration();
+
         Options options = new Options();
-        options.addOption("t", false, "output in text format");
+        
+        options.addOption("text", false, "output in text format(only for checking)");
+        options.addOption("help", false, "this help message.");
+
         CommandLineParser parser = new GnuParser();
-        CommandLine cmd = parser.parse( options, args);
+        CommandLine cmd ;
+        try {
+            cmd = parser.parse( options, args);
+        }
+        catch( ParseException exp ) {
+            System.out.println( "Unexpected exception:" + exp.getMessage() );
+            printHelp(options);
+            return 1;
+        }
+        if (cmd.hasOption("help") || cmd.getArgs().length < 2 ) { 
+            printHelp(options);
+            return 1;
+        }
 
 
         FileSystem fs = FileSystem.get(getConf());
@@ -189,7 +211,7 @@ public class BuildInvertedIndex  extends Configured implements Tool {
         fs.delete(outputPath);
 
         Boolean doTextOutput = false;
-        if(cmd.hasOption("t"))
+        if(cmd.hasOption("text"))
             doTextOutput = true;
 
         return (countTfJob(inputPath, outputPath, doTextOutput).waitForCompletion(true) ? 1: 0);
